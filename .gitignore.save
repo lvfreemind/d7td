@@ -1,0 +1,9 @@
+ssh -p 2200 ss^x
+^x
+^X
+# Ignore configuration files that may contain sensitive information.
+sites/*/settings*.php
+
+# Ignore paths that contain user-generated content.
+sites/*/files
+sites/*/private
