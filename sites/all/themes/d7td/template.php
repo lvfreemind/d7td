@@ -49,7 +49,7 @@ function d7td_process_username(&$variables) {
     $variables ['extra'] = str_replace('@','@NOSPAM.', $variables['extra']);
     }
     
-function d7td_preprocess_node($variables) {
+function d7td_preprocess_node(&$variables) {
     $node = $variables['node'];
     if (variable_get('node_submitted_' . $node->type, TRUE)) {
     $variables ['submitted'] = t('Posted by !username on !datetime', array('!username' =>$variables['name'], '!datetime' =>$variables['date']));

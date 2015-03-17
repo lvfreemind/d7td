@@ -6,7 +6,7 @@ core = 7.x
 stylesheets[all][] = css/layout.css
 stylesheets[all][] = css/style.css
 
-scipts[] = js/fool.min.js
+scripts[] = js/fool.min.js
 scripts[] = js/d7td.js
 
 regions[super_header] = Super header
