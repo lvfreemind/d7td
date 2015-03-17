@@ -48,3 +48,18 @@ $variables['link_attribute']['rel'] = 'nofollow';
 function d7td_process_username(&$variables) {
     $variables ['extra'] = str_replace('@','@NOSPAM.', $variables['extra']);
     }
+    
+function d7td_preprocess_node($variables) {
+    $node = $variables['node'];
+    if (variable_get('node_submitted_' . $node->type, TRUE)) {
+    $variables ['submitted'] = t('Posted by !username on !datetime', array('!username' =>$variables['name'], '!datetime' =>$variables['date']));
+        }
+      }
+    
+   function d7td_preprocess_html(&$variables) {
+    if ($GLOBALS['user']->userid = 1) {
+      drupal_add_css(drupal_get_path('theme', 'd7td') . '/css/superadmin.css');
+    } 
+   }
+
+   
