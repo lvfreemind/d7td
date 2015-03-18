@@ -6,8 +6,6 @@ core = 7.x
 stylesheets[all][] = css/layout.css
 stylesheets[all][] = css/style.css
 
-scripts[] = js/d7td.js
-
 regions[super_header] = Super header
 regions[header] = Header
 regions[help] = Help
