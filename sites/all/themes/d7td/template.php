@@ -61,5 +61,46 @@ function d7td_preprocess_node(&$variables) {
       drupal_add_css(drupal_get_path('theme', 'd7td') . '/css/superadmin.css');
     } 
    }
-
    
+ function d7td_form_alter(&$form, &$form_state, $form_id) {
+
+  if (!empty($form['#node_edit_form'])) {
+    
+    unset($form['additional_settings']);
+    $form['options']['#collapsed'] = FALSE;
+    $form['menu']['#collapsed'] = FALSE;
+    $form['path']['#collapsed'] = FALSE;
+    
+    $form['comment_settings']['#access'] = FALSE;
+  }
+}
+
+function d7td_theme($existing, $type, $theme, $path) {
+  return array(
+    'node_form' => array(
+      'render element' => 'form',
+      'template' => 'node-form',
+      'path' => drupal_get_path('theme', 'd7td') . '/templates',
+    ),
+  );
+}
+
+function d7td_preprocess_node_form(&$variables) {
+  $variables['buttons'] = drupal_render($variables['form']['actions']);
+  
+  if (!empty($variables['form']['field_tags'])) {
+    $variables['tags'] = drupal_render($variables['form']['field_tags']);
+  }
+  
+  $variables['right_side'] = drupal_render($variables['form']['options']);
+  $variables['right_side'] .= drupal_render($variables['form']['path']);
+  $variables['right_side'] .= drupal_render($variables['form']['menu']);
+  
+  $variables['right_side'] .= drupal_render($variables['form']['comment_settings']);
+  $variables['right_side'] .= drupal_render($variables['form']['revision_information']);
+  $variables['right_side'] .= drupal_render($variables['form']['author']);
+  
+  $variables['left_side'] = drupal_render_children($variables['form']);
+  
+  drupal_add_css(drupal_get_path('theme', 'd7td') . '/css/node-form.css');
+}

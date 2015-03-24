@@ -49,3 +49,31 @@ body {
 #postscript table tr {
   background: transparent;
 }
+
+/** Lesson 3 css for article summary view **/
+.custom-body-summary {
+    border: 1px solid #837A6D;
+    padding: 10px;
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+h2.summary-title {
+    border-bottom:  10px;
+}
+
+table tr td,
+table tr th {
+    padding: 4px 10px;
+}
+
+.view-users-list span.user-active {
+    color: #080;
+}
+.view-users-list span.user-blocked {
+    color: #c52020;
+}
+
+.view-users-list tr.user-blocked {
+  background-color: #fed2e7;
+}
+
