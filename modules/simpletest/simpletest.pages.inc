@@ -82,8 +82,8 @@ function theme_simpletest_test_table($variables) {
   // Define the images used to expand/collapse the test groups.
   $js = array(
     'images' => array(
-      theme('image', array('path' => 'misc/menu-collapsed.png', 'alt' => t('Expand'), 'title' => t('Expand'))) . ' <a href="#" class="simpletest-collapse">(' . t('Expand') . ')</a>',
-      theme('image', array('path' => 'misc/menu-expanded.png', 'alt' => t('Collapse'), 'title' => t('Collapse'))) . ' <a href="#" class="simpletest-collapse">(' . t('Collapse') . ')</a>',
+      theme('image', array('path' => 'misc/menu-collapsed.png', 'width' => 7, 'height' => 7, 'alt' => t('Expand'), 'title' => t('Expand'))) . ' <a href="#" class="simpletest-collapse">(' . t('Expand') . ')</a>',
+      theme('image', array('path' => 'misc/menu-expanded.png', 'width' => 7, 'height' => 7, 'alt' => t('Collapse'), 'title' => t('Collapse'))) . ' <a href="#" class="simpletest-collapse">(' . t('Collapse') . ')</a>',
     ),
   );
 
@@ -128,7 +128,7 @@ function theme_simpletest_test_table($variables) {
     );
 
     // Sorting $element by children's #title attribute instead of by class name.
-    uasort($element, '_simpletest_sort_by_title');
+    uasort($element, 'element_sort_by_title');
 
     // Cycle through each test within the current group.
     foreach (element_children($element) as $test_name) {
@@ -178,40 +178,19 @@ function theme_simpletest_test_table($variables) {
 }
 
 /**
- * Sort element by title instead of by class name.
- */
-function _simpletest_sort_by_title($a, $b) {
-  // This is for parts of $element that are not an array.
-  if (!isset($a['#title']) || !isset($b['#title'])) {
-    return 1;
-  }
-
-  return strcasecmp($a['#title'], $b['#title']);
-}
-
-/**
  * Run selected tests.
  */
 function simpletest_test_form_submit($form, &$form_state) {
+  simpletest_classloader_register();
   // Get list of tests.
   $tests_list = array();
-  $not_found = FALSE;
   foreach ($form_state['values'] as $class_name => $value) {
     // Since class_exists() will likely trigger an autoload lookup,
     // we do the fast check first.
     if ($value === 1 && class_exists($class_name)) {
       $tests_list[] = $class_name;
     }
-    else {
-      $not_found = TRUE;
-    }
   }
-
-  if ($not_found) {
-    drupal_flush_all_caches();
-    drupal_set_message(t('One or more of the test classes was not found. The cache has been cleared to correct the issue.'), 'error');
-  }
-
   if (count($tests_list) > 0 ) {
     $test_id = simpletest_run_tests($tests_list, 'drupal');
     $form_state['redirect'] = 'admin/config/development/testing/results/' . $test_id;
@@ -255,6 +234,8 @@ function simpletest_result_form($form, &$form_state, $test_id) {
     '#debug' => 0,
   );
 
+  simpletest_classloader_register();
+
   // Cycle through each test group.
   $header = array(t('Message'), t('Group'), t('Filename'), t('Line'), t('Function'), array('colspan' => 2, 'data' => t('Status')));
   $form['result']['results'] = array();
@@ -263,7 +244,7 @@ function simpletest_result_form($form, &$form_state, $test_id) {
     $info = call_user_func(array($group, 'getInfo'));
     $form['result']['results'][$group] = array(
       '#type' => 'fieldset',
-      '#title' => $info['group'] . ': ' . $info['name'],
+      '#title' => $info['name'],
       '#description' => $info['description'],
       '#collapsible' => TRUE,
     );
@@ -276,7 +257,7 @@ function simpletest_result_form($form, &$form_state, $test_id) {
       $row = array();
       $row[] = $assertion->message;
       $row[] = $assertion->message_group;
-      $row[] = basename($assertion->file);
+      $row[] = drupal_basename($assertion->file);
       $row[] = $assertion->line;
       $row[] = $assertion->function;
       $row[] = simpletest_result_status_image($assertion->status);
@@ -327,7 +308,7 @@ function simpletest_result_form($form, &$form_state, $test_id) {
   );
   $form['action']['filter']['#default_value'] = ($filter['fail'] ? 'fail' : 'all');
 
-  // Catagorized test classes for to be used with selected filter value.
+  // Categorized test classes for to be used with selected filter value.
   $form['action']['filter_pass'] = array(
     '#type' => 'hidden',
     '#default_value' => implode(',', $filter['pass']),
@@ -436,10 +417,10 @@ function simpletest_result_status_image($status) {
 
   if (!isset($map)) {
     $map = array(
-      'pass' => theme('image', array('path' => 'misc/watchdog-ok.png', 'alt' => t('Pass'))),
-      'fail' => theme('image', array('path' => 'misc/watchdog-error.png', 'alt' => t('Fail'))),
-      'exception' => theme('image', array('path' => 'misc/watchdog-warning.png', 'alt' => t('Exception'))),
-      'debug' => theme('image', array('path' => 'misc/watchdog-warning.png', 'alt' => t('Debug'))),
+      'pass' => theme('image', array('path' => 'misc/watchdog-ok.png', 'width' => 18, 'height' => 18, 'alt' => t('Pass'))),
+      'fail' => theme('image', array('path' => 'misc/watchdog-error.png', 'width' => 18, 'height' => 18, 'alt' => t('Fail'))),
+      'exception' => theme('image', array('path' => 'misc/watchdog-warning.png', 'width' => 18, 'height' => 18, 'alt' => t('Exception'))),
+      'debug' => theme('image', array('path' => 'misc/watchdog-warning.png', 'width' => 18, 'height' => 18, 'alt' => t('Debug'))),
     );
   }
   if (isset($map[$status])) {
@@ -450,6 +431,9 @@ function simpletest_result_status_image($status) {
 
 /**
  * Provides settings form for SimpleTest variables.
+ *
+ * @ingroup forms
+ * @see simpletest_settings_form_validate()
  */
 function simpletest_settings_form($form, &$form_state) {
   $form['general'] = array(
@@ -461,12 +445,6 @@ function simpletest_settings_form($form, &$form_state) {
     '#title' => t('Clear results after each complete test suite run'),
     '#description' => t('By default SimpleTest will clear the results after they have been viewed on the results page, but in some cases it may be useful to leave the results in the database. The results can then be viewed at <em>admin/config/development/testing/[test_id]</em>. The test ID can be found in the database, simpletest table, or kept track of when viewing the results the first time. Additionally, some modules may provide more analysis or features that require this setting to be disabled.'),
     '#default_value' => variable_get('simpletest_clear_results', TRUE),
-  );
-  $form['general']['simpletest_remove_tables'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Remove prefixed tables after each complete test suite run'),
-    '#description' => t('By default SimpleTest will remove the prefixed tables created during testing, but in some cases it may be useful to leave the tables in the database.'),
-    '#default_value' => variable_get('simpletest_remove_tables', TRUE),
   );
   $form['general']['simpletest_verbose'] = array(
     '#type' => 'checkbox',
@@ -495,29 +473,41 @@ function simpletest_settings_form($form, &$form_state) {
     ),
     '#default_value' => variable_get('simpletest_httpauth_method', CURLAUTH_BASIC),
   );
+  $username = variable_get('simpletest_httpauth_username');
+  $password = variable_get('simpletest_httpauth_password');
   $form['httpauth']['simpletest_httpauth_username'] = array(
     '#type' => 'textfield',
     '#title' => t('Username'),
-    '#default_value' => variable_get('simpletest_httpauth_username', ''),
+    '#default_value' => $username,
   );
+  if ($username && $password) {
+    $form['httpauth']['simpletest_httpauth_username']['#description'] = t('Leave this blank to delete both the existing username and password.');
+  }
   $form['httpauth']['simpletest_httpauth_password'] = array(
-    '#type' => 'textfield',
+    '#type' => 'password',
     '#title' => t('Password'),
-    '#default_value' => variable_get('simpletest_httpauth_password', ''),
   );
-  $form['remote'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('Remote'),
-    '#description' => t('Settings related to remote testing.'),
-    '#collapsible' => TRUE,
-    '#collapsed' => TRUE,
-  );
-  $form['remote']['simpletest_remote_url'] = array(
-    '#type' => 'textfield',
-    '#title' => t('URL'),
-    '#description' => t('Remote URL to perform testing against, leave blank for local url.'),
-    '#default_value' => variable_get('simpletest_remote_url', ''),
-  );
+  if ($password) {
+    $form['httpauth']['simpletest_httpauth_password']['#description'] = t('To change the password, enter the new password here.');
+  }
 
   return system_settings_form($form);
 }
+
+/**
+ * Validation handler for simpletest_settings_form().
+ */
+function simpletest_settings_form_validate($form, &$form_state) {
+  // If a username was provided but a password wasn't, preserve the existing
+  // password.
+  if (!empty($form_state['values']['simpletest_httpauth_username']) && empty($form_state['values']['simpletest_httpauth_password'])) {
+    $form_state['values']['simpletest_httpauth_password'] = variable_get('simpletest_httpauth_password', '');
+  }
+
+  // If a password was provided but a username wasn't, the credentials are
+  // incorrect, so throw an error.
+  if (empty($form_state['values']['simpletest_httpauth_username']) && !empty($form_state['values']['simpletest_httpauth_password'])) {
+    form_set_error('simpletest_httpauth_username', t('HTTP authentication credentials must include a username in addition to a password.'));
+  }
+}
+
