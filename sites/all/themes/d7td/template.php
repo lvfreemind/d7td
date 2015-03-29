@@ -54,15 +54,22 @@ function d7td_preprocess_node(&$variables) {
     if (variable_get('node_submitted_' . $node->type, TRUE)) {
     $variables ['submitted'] = t('Posted by !username on !datetime', array('!username' =>$variables['name'], '!datetime' =>$variables['date']));
         }
-      }
-    
+        
+        if (!empty($variables['preprocess_fields']) && in_array('comment_info', $variables['preprocess_fields'])) {
+            $comment_user = user_load($variables['last_comment_uid']);
+            $comment_username = theme('username', array('account' => $comment_user));
+            $variables['comment_info'] = t('Comment Count: @count, Last Comment By: !commenter', array('@count' => $variables['comment_count'], '!commenter' => $comment_username));
+        }
+        /*var_dump($variables);exit;*/
+      }      
+   
    function d7td_preprocess_html(&$variables) {
     if ($GLOBALS['user']->userid = 1) {
       drupal_add_css(drupal_get_path('theme', 'd7td') . '/css/superadmin.css');
     } 
    }
    
- function d7td_form_alter(&$form, &$form_state, $form_id) {
+ /*function d7td_form_alter(&$form, &$form_state, $form_id) {
 
   if (!empty($form['#node_edit_form'])) {
     
@@ -103,4 +110,4 @@ function d7td_preprocess_node_form(&$variables) {
   $variables['left_side'] = drupal_render_children($variables['form']);
   
   drupal_add_css(drupal_get_path('theme', 'd7td') . '/css/node-form.css');
-}
+}*/
